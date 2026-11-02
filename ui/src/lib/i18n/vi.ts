@@ -4714,6 +4714,14 @@ const vi: Record<string, string> = {
   "Use letters, digits and hyphens, e.g. web01.": "Chỉ dùng chữ, số và dấu gạch ngang, ví dụ web01.",
   "Use letters, digits, hyphens and dots, e.g. app.example.com.": "Chỉ dùng chữ, số, dấu gạch ngang và dấu chấm, ví dụ app.example.com.",
   "Zone for the records of this network's ports. A change applies to the records Neutron publishes from now on; empty stops publishing.": "Zone cho bản ghi của các port trên network này. Thay đổi chỉ áp dụng cho các bản ghi Neutron publish từ giờ; để trống thì ngừng publish.",
+  "Published in Designate: the subnet publishes its fixed IPs.": "Đã publish trong Designate: subnet đang publish fixed IP.",
+  "Name inside the network (Neutron's DNS). Designate gets it for this address only when the subnet publishes fixed IPs or on a provider network; otherwise only the floating IP is published.": "Tên nội bộ trong network (DNS của Neutron). Designate chỉ nhận tên này cho địa chỉ này khi subnet publish fixed IP hoặc trên provider network; nếu không thì chỉ floating IP được publish.",
+  "in DNS": "trong DNS",
+  "Name Neutron publishes in Designate for this floating IP.": "Tên Neutron publish trong Designate cho floating IP này.",
+  "Publish fixed IPs in DNS": "Publish fixed IP vào DNS",
+  "Neutron also publishes the fixed IPs of named ports in Designate, not only floating IPs. Needs a DNS domain on the network or the port.": "Neutron publish cả fixed IP của các port có DNS name vào Designate, không chỉ floating IP. Cần DNS domain trên network hoặc port.",
+  "Fixed IPs in DNS": "Fixed IP trong DNS",
+  "Published": "Đã publish",
 };
 
 export default vi;

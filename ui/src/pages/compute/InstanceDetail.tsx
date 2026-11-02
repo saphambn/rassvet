@@ -30,9 +30,11 @@ import {
   serverLabel,
   serverStatus,
   useFloatingIps,
+  useNetworks,
   useOsGet,
   usePorts,
   useSecurityGroups,
+  useSubnets,
   useServer,
   useVolumesById,
   volumeStatus,
@@ -41,6 +43,7 @@ import { useSession } from "@/lib/session";
 import { useTab } from "@/lib/useTab";
 import { cn } from "@/lib/utils";
 import { useNetName, usePortActions } from "../network/networkActions";
+import { FixedIps, floatingName, useNeutronDns } from "../network/dns";
 import { useVolumeActions } from "../storage/volumeActions";
 import { useServerActions } from "./serverActions";
 import { UserDataCard } from "./UserData";
@@ -443,6 +446,12 @@ function InterfacesTab({ server, onAttach }: { server: Server; onAttach: () => v
   const fip = (p: Port) => fips.data?.filter((f) => f.port_id === p.id).map((f) => f.floating_ip_address).join(", ") ?? "";
   const ips = (p: Port) => p.fixed_ips.map((f) => f.ip_address).join(", ");
   const sgs = (p: Port) => (p.port_security_enabled === false ? tr("port security off") : (p.security_groups ?? []).map(sgName).join(", ") || "none");
+  const dns = useNeutronDns();
+  const subnets = useSubnets();
+  const nets = useNetworks(undefined, dns.on);
+  // The public name of each floating IP (its own, or the port's DNS name in the network's domain).
+  const fipNames = (p: Port) =>
+    [...new Set((fips.data ?? []).filter((f) => f.port_id === p.id).map((f) => floatingName(f, p, nets.data?.find((n) => n.id === p.network_id))).filter(Boolean))];
 
   const columns: Column<Port>[] = [
     { key: "name", header: tr("Name"), width: "11rem", cell: (p) => <span className={p.name ? "font-medium" : "text-muted"}>{portLabel(p)}</span>, value: (p) => `${portLabel(p)} ${p.id}` },
@@ -456,8 +465,30 @@ function InterfacesTab({ server, onAttach }: { server: Server; onAttach: () => v
       ),
       value: (p) => netName(p.network_id),
     },
-    { key: "ips", header: tr("Fixed IPs"), width: "10rem", mono: true, cell: ips, value: ips },
-    { key: "fip", header: tr("Floating IP"), width: "9rem", mono: true, hideBelow: "sm", cell: (p) => fip(p) || <span className="font-sans text-muted">—</span>, value: fip },
+    { key: "ips", header: tr("Fixed IPs"), width: dns.on ? "13rem" : "10rem", wrap: dns.on, mono: true, cell: (p) => (dns.on && p.dns_name ? <FixedIps port={p} subnets={subnets.data} dnsOn /> : ips(p)), value: ips },
+    {
+      key: "fip",
+      header: tr("Floating IP"),
+      width: dns.on ? "13rem" : "9rem",
+      wrap: dns.on,
+      mono: true,
+      hideBelow: "sm",
+      cell: (p) =>
+        fip(p) ? (
+          <span className="inline-flex flex-col">
+            {fip(p)}
+            {dns.on &&
+              fipNames(p).map((n) => (
+                <span key={n} className="block font-sans text-xs break-all text-muted" title={tr("Name Neutron publishes in Designate for this floating IP.")}>
+                  {n}
+                </span>
+              ))}
+          </span>
+        ) : (
+          <span className="font-sans text-muted">—</span>
+        ),
+      value: fip,
+    },
     { key: "mac", header: tr("MAC address"), width: "10.5rem", mono: true, hideBelow: "lg", cell: (p) => p.mac_address, value: (p) => p.mac_address },
     { key: "sgs", header: tr("Security groups"), hideBelow: "md", cell: sgs, value: sgs },
     { key: "status", header: tr("Status"), width: "6.5rem", hideBelow: "xl", cell: (p) => <StatusDot status={networkStatus(p.status)} label={p.status.toLowerCase()} />, value: (p) => p.status },

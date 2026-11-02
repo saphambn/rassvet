@@ -13,7 +13,7 @@ import { useProjects } from "@/lib/identity";
 import { type FloatingIp, networkStatus, os, useInvalidate, useListOrPages, useNetworks, usePorts, useServers } from "@/lib/os";
 import { useSession } from "@/lib/session";
 import { tr } from "@/lib/i18n";
-import { DnsDomainField, dnsDomain, dnsNameOk, useNeutronDns } from "./dns";
+import { DnsDomainField, dnsDomain, dnsNameOk, floatingName, useNeutronDns } from "./dns";
 
 export default function FloatingIps({ admin = false }: { admin?: boolean }) {
   const session = useSession().data!;
@@ -42,7 +42,11 @@ export default function FloatingIps({ admin = false }: { admin?: boolean }) {
   const ports = usePorts();
   const servers = useServers(admin ? { all_tenants: 1 } : undefined);
   const dns = useNeutronDns();
-  const fipName = (f: FloatingIp) => (f.dns_name ? `${f.dns_name}.${f.dns_domain ?? ""}` : "");
+  // Published name: the floating IP's own, else the DNS name of the port it points to.
+  const fipName = (f: FloatingIp) => {
+    const port = f.port_id ? ports.data?.find((p) => p.id === f.port_id) : undefined;
+    return floatingName(f, port, port && nets.data?.find((n) => n.id === port.network_id));
+  };
   const invalidate = useInvalidate();
   const toast = useToast();
   const [allocating, setAllocating] = useState(false);

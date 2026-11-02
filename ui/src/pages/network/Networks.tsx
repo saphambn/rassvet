@@ -34,7 +34,7 @@ import { PortDialog, SubnetDialog, useNetworkActions, usePortActions, useSubnetA
 import { type SubnetSourceState, SubnetSourceFields, useSubnetSource } from "./subnetSource";
 import { QosPolicyPicker } from "./QosPolicies";
 import { NetworkSharing } from "./Rbac";
-import { DnsDomainField, dnsDomain, dnsNameOk, useNeutronDns } from "./dns";
+import { DnsDomainField, FixedIps, dnsDomain, dnsNameOk, useNeutronDns } from "./dns";
 import { tr } from "@/lib/i18n";
 
 export default function Networks({ admin = false }: { admin?: boolean }) {
@@ -165,9 +165,10 @@ export default function Networks({ admin = false }: { admin?: boolean }) {
   );
 }
 
-type SubnetVals = { name: string; gateway: boolean; dhcp: boolean; dns: string };
+type SubnetVals = { name: string; gateway: boolean; dhcp: boolean; dns: string; publish?: boolean };
 
 function SubnetFields({ v, set, src }: { v: SubnetVals; set: (p: Partial<SubnetVals>) => void; src: SubnetSourceState }) {
+  const dns = useNeutronDns();
   return (
     <>
       <Field label={tr("Subnet name")}>{(id) => <Input id={id} value={v.name} onChange={(e) => set({ name: e.target.value })} />}</Field>
@@ -179,6 +180,9 @@ function SubnetFields({ v, set, src }: { v: SubnetVals; set: (p: Partial<SubnetV
         <Switch checked={v.gateway} onChange={(gateway) => set({ gateway })} label={tr("Gateway")} hint={tr("First address of the subnet. Needed to reach other networks through a router.")} />
         <Switch checked={v.dhcp} onChange={(dhcp) => set({ dhcp })} label="DHCP" hint={tr("Instances get their address automatically.")} />
       </div>
+      {dns.publishFixedIp && (
+        <Switch checked={!!v.publish} onChange={(publish) => set({ publish })} label={tr("Publish fixed IPs in DNS")} hint={tr("Neutron also publishes the fixed IPs of named ports in Designate, not only floating IPs. Needs a DNS domain on the network or the port.")} />
+      )}
     </>
   );
 }
@@ -190,6 +194,7 @@ function subnetBody(networkId: string, v: SubnetVals, src: SubnetSourceState) {
     ...src.body(),
     enable_dhcp: v.dhcp,
     dns_nameservers: v.dns.split(",").map((s) => s.trim()).filter(Boolean),
+    ...(v.publish ? { dns_publish_fixed_ip: true } : {}),
   };
   if (!v.gateway) body.gateway_ip = null;
   return { subnet: body };
@@ -431,6 +436,7 @@ export function NetworkDetail() {
 
 function SubnetsTab({ network, subnets }: { network: Network; subnets: ReturnType<typeof useSubnets> }) {
   const [creating, setCreating] = useState(false);
+  const dns = useNeutronDns();
   const actions = useSubnetActions(network);
   const pools = (s: Subnet) => (s.allocation_pools ?? []).map((p) => `${p.start} – ${p.end}`).join(", ");
   const subnetPools = useSubnetPools(undefined, !!subnets.data?.some((s) => s.subnetpool_id));
@@ -458,6 +464,9 @@ function SubnetsTab({ network, subnets }: { network: Network; subnets: ReturnTyp
       value: poolName,
     },
     { key: "dns", header: "DNS", hideBelow: "2xl", mono: true, cell: (s) => (s.dns_nameservers ?? []).join(", "), value: (s) => (s.dns_nameservers ?? []).join(", ") },
+    ...(dns.publishFixedIp
+      ? [{ key: "publish", header: tr("Fixed IPs in DNS"), width: "9rem", hideBelow: "lg" as const, cell: (s: Subnet) => (s.dns_publish_fixed_ip ? tr("Published") : tr("No")), value: (s: Subnet) => (s.dns_publish_fixed_ip ? "Published" : "No") }]
+      : []),
   ];
   return (
     <>
@@ -510,6 +519,7 @@ function PortsTab({ network, ports, subnets }: { network: Network; ports: Return
   }, [groups.data]);
   const subnetName = (id: string) => subnets.find((s) => s.id === id)?.name;
   const ips = (p: Port) => p.fixed_ips.map((f) => f.ip_address).join(", ");
+  const dns = useNeutronDns();
   const device = (p: Port) => (p.device_owner?.startsWith("compute:") ? serverName(p.device_id) : portOwner(p));
   const sgs = (p: Port) => (p.port_security_enabled === false ? tr("port security off") : (p.security_groups ?? []).map(sgName).join(", "));
 
@@ -523,9 +533,15 @@ function PortsTab({ network, ports, subnets }: { network: Network; ports: Return
     {
       key: "ips",
       header: tr("Fixed IPs"),
-      width: "10rem",
+      width: dns.on ? "13rem" : "10rem",
+      wrap: dns.on,
       mono: true,
-      cell: (p) => <span title={p.fixed_ips.map((f) => `${f.ip_address} on ${subnetName(f.subnet_id) ?? f.subnet_id}`).join("\n")}>{ips(p)}</span>,
+      cell: (p) =>
+        dns.on && p.dns_name ? (
+          <FixedIps port={p} subnets={subnets} dnsOn />
+        ) : (
+          <span title={p.fixed_ips.map((f) => `${f.ip_address} on ${subnetName(f.subnet_id) ?? f.subnet_id}`).join("\n")}>{ips(p)}</span>
+        ),
       value: ips,
     },
     { key: "mac", header: tr("MAC address"), width: "10.5rem", mono: true, hideBelow: "xl", cell: (p) => p.mac_address, value: (p) => p.mac_address },

@@ -469,6 +469,7 @@ export function generate(
         ["no_gateway", s.gateway_ip ? null : "true"],
         ["enable_dhcp", s.enable_dhcp ? null : "false"],
         ["dns_nameservers", s.dns_nameservers?.length ? list(s.dns_nameservers.map(str)) : null],
+        ["dns_publish_fixed_ip", s.dns_publish_fixed_ip ? "true" : null],
         ["ipv6_address_mode", s.ipv6_address_mode ? str(s.ipv6_address_mode) : null],
         ["ipv6_ra_mode", s.ipv6_ra_mode ? str(s.ipv6_ra_mode) : null],
         ["subnetpool_id", s.subnetpool_id ? plain("subnet_pool", s.subnetpool_id) : null],

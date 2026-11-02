@@ -156,6 +156,8 @@ export function SubnetDialog({ network, subnet, poolId, onClose }: { network?: N
   const [dhcp, setDhcp] = useState(subnet?.enable_dhcp ?? true);
   const [dns, setDns] = useState((subnet?.dns_nameservers ?? []).join("\n"));
   const [pools, setPools] = useState((subnet?.allocation_pools ?? []).map((p) => `${p.start}, ${p.end}`).join("\n"));
+  const dnsExt = useNeutronDns();
+  const [publish, setPublish] = useState(subnet?.dns_publish_fixed_ip ?? false);
   const [routes, setRoutes] = useState((subnet?.host_routes ?? []).map((r) => `${r.destination}, ${r.nexthop}`).join("\n"));
 
   const pair = (l: string) => l.replace(/\s+-\s+/, ",").split(/[,\s]+/).filter(Boolean);
@@ -181,6 +183,7 @@ export function SubnetDialog({ network, subnet, poolId, onClose }: { network?: N
     }
     if (gwMode === "none") b.gateway_ip = null;
     else if (gwMode === "custom") b.gateway_ip = gw.trim();
+    if (dnsExt.publishFixedIp && publish !== (subnet?.dns_publish_fixed_ip ?? false)) b.dns_publish_fixed_ip = publish;
     if (!editing) {
       b.network_id = net!.id;
       Object.assign(b, src.body());
@@ -253,6 +256,7 @@ export function SubnetDialog({ network, subnet, poolId, onClose }: { network?: N
         )}
       </div>
       <Switch checked={dhcp} onChange={setDhcp} label="DHCP" hint={tr("Instances get their address automatically.")} />
+      {dnsExt.publishFixedIp && <Switch checked={publish} onChange={setPublish} label={tr("Publish fixed IPs in DNS")} hint={tr("Neutron also publishes the fixed IPs of named ports in Designate, not only floating IPs. Needs a DNS domain on the network or the port.")} />}
       <Field label={tr("DNS servers")} hint={tr("One per line (or comma-separated). Empty uses the cloud's default.")}>
         {(id) => <Textarea id={id} rows={2} value={dns} onChange={(e) => setDns(e.target.value)} placeholder={"1.1.1.1\n8.8.8.8"} className="font-mono text-[13px]" />}
       </Field>

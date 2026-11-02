@@ -107,6 +107,15 @@ these fields; the zone's **Overview** then says so, and you add records by hand 
 4. Associate a floating IP with the instance. Neutron adds the record to the zone; the network's **Overview**
    shows its DNS domain and **Ports** lists each port's DNS name.
 
+The instance's **Interfaces** tab (and a network's **Ports** tab) shows the names under the addresses: under a
+fixed IP its name inside the network, under the floating IP the name published in Designate.
+
+![Names of an instance's addresses](../images/project/instance-interfaces-dns.png)
+
+Only floating IPs are published, unless the subnet publishes fixed IPs too: where the cloud allows it, turn on
+**Publish fixed IPs in DNS** when you create or edit the subnet. Its fixed IPs then show *· in DNS*, and the
+**Subnets** tab says which subnets do.
+
 The zone's **Overview** lists the networks whose DNS domain it is:
 
 ![Networks using a zone](../images/project/dns-zone-auto.png)

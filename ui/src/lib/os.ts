@@ -721,6 +721,8 @@ export interface Subnet {
   ipv6_ra_mode?: string | null;
   /** Pool the CIDR was allocated from (subnet_allocation), if any. */
   subnetpool_id?: string | null;
+  /** Publish its ports' fixed IPs in Designate (subnet-dns-publish-fixed-ip extension). */
+  dns_publish_fixed_ip?: boolean;
 }
 
 export interface Port {
