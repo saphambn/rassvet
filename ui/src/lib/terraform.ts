@@ -455,6 +455,7 @@ export function generate(
         ["port_security_enabled", n.port_security_enabled === false ? "false" : null],
         ["shared", n.shared ? "true" : null],
         ["external", n["router:external"] ? "true" : null],
+        ["dns_domain", n.dns_domain ? str(n.dns_domain) : null],
       ]),
       n.id,
     );
@@ -643,6 +644,8 @@ export function generate(
           ["pool", str(pool ?? f.floating_network_id)],
           ["description", f.description ? str(f.description) : null],
           ["port_id", portRef],
+          ["dns_name", f.dns_name ? str(f.dns_name) : null],
+          ["dns_domain", f.dns_name && f.dns_domain ? str(f.dns_domain) : null],
         ]),
         `# address: ${f.floating_ip_address}`,
       ],

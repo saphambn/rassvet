@@ -29,7 +29,7 @@ Ceph RGW, *Load balancers* needs Octavia, *Kubernetes clusters* needs Magnum, *D
 | 13 | [Cleanup](project/13-cleanup.md) | find and remove leftovers that waste quota |
 | 14 | [Export to Terraform](project/14-export-to-terraform.md) | turn resources you built by hand into code |
 | 15 | [Kubernetes clusters](project/15-kubernetes-clusters.md) | create a Kubernetes cluster, connect with kubectl, resize and upgrade it |
-| 16 | [DNS zones](project/16-dns-zones.md) | host a domain's records, import / export zone files, set reverse DNS of floating IPs |
+| 16 | [DNS zones](project/16-dns-zones.md) | host a domain's records, import / export zone files, set reverse DNS of floating IPs, automatic records for instances (DNS domain of a network) |
 
 ## Admin guides
 
@@ -124,7 +124,8 @@ Ceph RGW, *Load balancers* needs Octavia, *Kubernetes clusters* needs Magnum, *D
 - DNS zones (Designate extension): zones (primary or secondary), record sets with per-type hints and checks
   (A, AAAA, CNAME, MX, TXT with automatic quoting, SRV, CAA, NS, PTR, SSHFP…), name servers to set at the
   registrar, zone file import and export, transfers to another project (request ID + key), shares with other
-  projects (2023.1+), and reverse DNS (PTR) of floating IPs.
+  projects (2023.1+), and reverse DNS (PTR) of floating IPs. Where Neutron is integrated with Designate: DNS
+  domain of networks, DNS names of ports and floating IPs, and the networks publishing into each zone.
 - Object storage (Swift API — OpenStack Swift or Ceph RGW): containers (public or private, storage policy,
   versioning, quotas, metadata), a file browser with folders, drag-and-drop uploads, downloads, properties,
   copy/move and temporary links. EC2 credentials give S3 tools (aws, s3cmd, rclone, boto3) access, with ready

@@ -10,6 +10,7 @@ import { type Port, networkStatus, os, portLabel, portOwner, useInvalidate, useL
 import { useSession } from "@/lib/session";
 import { useServerNames } from "../storage/volumeActions";
 import { PortDialog, usePortActions } from "./networkActions";
+import { useNeutronDns } from "./dns";
 import { tr } from "@/lib/i18n";
 
 /** Instances whose IDs go into one ports query (keeps the URL well under server limits). */
@@ -116,6 +117,8 @@ export default function Ports({ admin = false }: { admin?: boolean }) {
   const ips = (p: Port) => p.fixed_ips.map((f) => f.ip_address).join(", ");
   const device = (p: Port) => (p.device_owner?.startsWith("compute:") ? serverName(p.device_id) : portOwner(p));
   const sgs = (p: Port) => (p.port_security_enabled === false ? tr("port security off") : (p.security_groups ?? []).map(sgName).join(", "));
+  const dns = useNeutronDns();
+  const fqdn = (p: Port) => [...new Set((p.dns_assignment ?? []).map((a) => a.fqdn).filter(Boolean))].join(", ") || p.dns_name || "";
 
   const columns: Column<Port>[] = [
     {
@@ -159,6 +162,7 @@ export default function Ports({ admin = false }: { admin?: boolean }) {
       csv: (p) => `${p.device_owner} ${p.device_id}`.trim(),
     },
     { key: "sgs", header: tr("Security groups"), hideBelow: "2xl", cell: sgs, value: sgs },
+    ...(dns.on ? [{ key: "dns", header: tr("DNS name"), hideBelow: "2xl" as const, mono: true, cell: fqdn, value: fqdn }] : []),
     { key: "status", header: tr("Status"), width: "6.5rem", cell: (p) => <StatusDot status={networkStatus(p.status)} label={p.status.toLowerCase()} />, value: (p) => p.status },
     { key: "admin", header: tr("Admin"), width: "5rem", hideBelow: "lg", cell: (p) => (p.admin_state_up === false ? tr("Down") : tr("Up")), value: (p) => (p.admin_state_up === false ? "Down" : "Up") },
   ];

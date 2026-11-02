@@ -31,6 +31,15 @@ On **DNS → DNS service**:
 
 ![DNS service: TLDs](../images/admin/dns-settings.png)
 
+## Neutron DNS integration
+
+Rassvet shows the DNS fields of networks, ports and floating IPs (see
+[automatic records](../project/16-dns-zones.md#automatic-records-for-instances-neutron-dns-integration)) only
+when Neutron lists the `dns-integration` extension (`dns-domain-ports` adds a domain per port). That needs, in
+Neutron, `[DEFAULT] dns_domain` and `external_dns_driver = designate`, the `dns_domain_ports` ML2 extension
+driver and a `[designate]` section with credentials for Designate. Without it the zone overview tells users that
+records aren't created automatically.
+
 ## Quotas
 
 Designate has no list of per-project quotas, so **Quotas** asks for a project first and shows its five limits:

@@ -27,6 +27,8 @@ import {
   tr,
   useInvalidate,
   useNavigate,
+  useNetworks,
+  useNeutronExtensions,
   useParams,
   useProjects,
   useTab,
@@ -180,7 +182,50 @@ function Overview({ zone: z }: { zone: Zone }) {
           </>
         )}
       </Card>
+      <NeutronRecords zone={z} />
     </div>
+  );
+}
+
+/**
+ * Records Neutron publishes in this zone: networks whose DNS domain it is (their ports'
+ * floating IPs, or fixed IPs on provider networks, get records), or why nothing is published.
+ */
+function NeutronRecords({ zone: z }: { zone: Zone }) {
+  const ext = useNeutronExtensions();
+  const on = ext.data?.has("dns-integration") ?? false;
+  const nets = useNetworks(undefined, on);
+  if (ext.isPending) return null;
+  const using = (nets.data ?? []).filter((n) => n.dns_domain === z.name);
+  return (
+    <Card title={tr("Automatic records")}>
+      {!on ? (
+        <p className="text-sm text-muted">
+          {tr("This cloud's Neutron isn't integrated with Designate, so instances and floating IPs get no records here automatically; add them as record sets. Your operator can turn the integration on (Neutron's external_dns_driver = designate).")}
+        </p>
+      ) : (
+        <>
+          <ErrorNotice error={nets.error} className="mb-3" />
+          {using.length ? (
+            <ul className="mb-3 space-y-1">
+              {using.map((n) => (
+                <li key={n.id} className="flex items-center gap-2 text-sm">
+                  <Icon name="network" className="size-3.5 text-muted" />
+                  <Link to={`/network/networks/${n.id}`} className="text-cable hover:underline">
+                    {n.name || n.id}
+                  </Link>
+                </li>
+              ))}
+            </ul>
+          ) : (
+            !nets.isPending && <p className="mb-3 text-sm">{tr("No network uses this zone yet.")}</p>
+          )}
+          <p className="text-sm text-muted">
+            {tr("Neutron adds records here for the ports of networks whose DNS domain is {name}, e.g. web01.{name} for an instance's floating IP. Set it in Network → Edit → DNS domain.", { name: undot(z.name) })}
+          </p>
+        </>
+      )}
+    </Card>
   );
 }
 

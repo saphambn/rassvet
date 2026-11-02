@@ -4697,6 +4697,23 @@ const vi: Record<string, string> = {
   "Names or a pasted UUID find resources; vol:name searches one kind": "Tên hoặc UUID tìm tài nguyên; vol:tên chỉ tìm một loại",
   "Load balancers (with listeners, pools and members)": "Load balancer (kèm listener, pool và member)",
   "{l} listener(s), {p} pool(s), {m} member(s)": "{l} listener, {p} pool, {m} member",
+  "Also choose a DNS domain.": "Hãy chọn thêm DNS domain.",
+  "Also enter a DNS name.": "Hãy nhập thêm DNS name.",
+  "Automatic records": "Bản ghi tự động",
+  "DNS domain": "DNS domain",
+  "DNS name": "DNS name",
+  "Host name of this port, e.g. web01. Nova sets it to the instance's name for instance ports.": "Tên host của port, ví dụ web01. Với port của instance, Nova tự đặt bằng tên instance.",
+  "Names now:": "Tên hiện tại:",
+  "Neutron adds records here for the ports of networks whose DNS domain is {name}, e.g. web01.{name} for an instance's floating IP. Set it in Network → Edit → DNS domain.": "Neutron tự thêm bản ghi vào đây cho các port thuộc network có DNS domain là {name}, ví dụ web01.{name} cho floating IP của một instance. Đặt ở Network → Sửa → DNS domain.",
+  "Neutron publishes the records of this network's ports in this Designate zone, e.g. web01.app.example.com. The zone must exist in Designate.": "Neutron publish bản ghi của các port trên network này vào zone Designate này, ví dụ web01.app.example.com. Zone phải có sẵn trong Designate.",
+  "No network uses this zone yet.": "Chưa có network nào dùng zone này.",
+  "Optional: a zone for this port's records instead of the network's DNS domain.": "Tuỳ chọn: zone riêng cho bản ghi của port này, thay cho DNS domain của network.",
+  "Optional: publish this address in Designate as <name>.<domain>, whatever it points to. Can't be changed later.": "Tuỳ chọn: publish địa chỉ này trong Designate dưới tên <name>.<domain>, dù nó trỏ tới đâu. Không đổi được về sau.",
+  "The zone must exist in Designate, e.g. example.com.": "Zone phải có sẵn trong Designate, ví dụ example.com.",
+  "This cloud's Neutron isn't integrated with Designate, so instances and floating IPs get no records here automatically; add them as record sets. Your operator can turn the integration on (Neutron's external_dns_driver = designate).": "Neutron của cloud này chưa tích hợp với Designate, nên instance và floating IP không tự có bản ghi ở đây; hãy thêm thủ công bằng record set. Bên vận hành có thể bật tích hợp (external_dns_driver = designate trong Neutron).",
+  "Use letters, digits and hyphens, e.g. web01.": "Chỉ dùng chữ, số và dấu gạch ngang, ví dụ web01.",
+  "Use letters, digits, hyphens and dots, e.g. app.example.com.": "Chỉ dùng chữ, số, dấu gạch ngang và dấu chấm, ví dụ app.example.com.",
+  "Zone for the records of this network's ports. A change applies to the records Neutron publishes from now on; empty stops publishing.": "Zone cho bản ghi của các port trên network này. Thay đổi chỉ áp dụng cho các bản ghi Neutron publish từ giờ; để trống thì ngừng publish.",
 };
 
 export default vi;

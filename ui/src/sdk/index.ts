@@ -53,6 +53,8 @@ export {
   useFlavors,
   useKeypairs,
 } from "@/lib/os";
+// Neutron extension aliases loaded on this cloud, to show features only where they work
+export { useNeutronExtensions } from "@/lib/neutron";
 // Glance images a project can boot (its own, accepted shared ones and public ones, active only)
 export { type Image, useBootImages } from "@/lib/image";
 export { fmtDate, fmtBytes } from "@/lib/format";

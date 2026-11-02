@@ -700,6 +700,8 @@ export interface Network {
   availability_zones?: string[];
   created_at?: string;
   qos_policy_id?: string | null;
+  /** DNS integration (dns-integration extension): zone for the records of its ports. */
+  dns_domain?: string;
 }
 
 export interface Subnet {
@@ -741,6 +743,10 @@ export interface Port {
   created_at?: string;
   updated_at?: string;
   qos_policy_id?: string | null;
+  /** DNS integration: host name, its own zone (dns-domain-ports) and the names it got. */
+  dns_name?: string;
+  dns_domain?: string;
+  dns_assignment?: { hostname: string; ip_address: string; fqdn: string }[];
   /** Set on a trunk's parent port (trunk-details extension). */
   trunk_details?: { trunk_id: string; sub_ports: { port_id: string; segmentation_type: string; segmentation_id: number; mac_address?: string }[] };
 }
@@ -818,6 +824,9 @@ export interface FloatingIp {
   project_id: string;
   created_at?: string;
   updated_at?: string;
+  /** DNS integration: record published in Designate for this address (set at allocation). */
+  dns_name?: string;
+  dns_domain?: string;
 }
 
 export const useNetworks = (q?: Query, enabled = true) => useOsList<Network>("network", "networks", "networks", q, { enabled });

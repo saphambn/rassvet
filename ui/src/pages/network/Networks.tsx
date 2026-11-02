@@ -34,6 +34,7 @@ import { PortDialog, SubnetDialog, useNetworkActions, usePortActions, useSubnetA
 import { type SubnetSourceState, SubnetSourceFields, useSubnetSource } from "./subnetSource";
 import { QosPolicyPicker } from "./QosPolicies";
 import { NetworkSharing } from "./Rbac";
+import { DnsDomainField, dnsDomain, dnsNameOk, useNeutronDns } from "./dns";
 import { tr } from "@/lib/i18n";
 
 export default function Networks({ admin = false }: { admin?: boolean }) {
@@ -214,6 +215,8 @@ function CreateNetworkDialog({ open, onClose, provider }: { open: boolean; onClo
   const [external, setExternal] = useState(false);
   const [shared, setShared] = useState(false);
   const [qos, setQos] = useState("");
+  const dns = useNeutronDns();
+  const [domain, setDomain] = useState("");
   const invalidate = useInvalidate();
   const toast = useToast();
   const navigate = useNavigate();
@@ -228,6 +231,7 @@ function CreateNetworkDialog({ open, onClose, provider }: { open: boolean; onClo
           name: name.trim(),
           admin_state_up: true,
           ...(qos ? { qos_policy_id: qos } : {}),
+          ...(dns.on && domain.trim() ? { dns_domain: dnsDomain(domain) } : {}),
           ...(provider
             ? {
                 ...(project ? { project_id: project } : {}),
@@ -272,7 +276,7 @@ function CreateNetworkDialog({ open, onClose, provider }: { open: boolean; onClo
           <Button type="button" onClick={onClose}>
             {tr("Cancel")}
           </Button>
-          <Button type="submit" variant="primary" busy={m.isPending} disabled={!name.trim() || (withSubnet && !src.valid)}>
+          <Button type="submit" variant="primary" busy={m.isPending} disabled={!name.trim() || (withSubnet && !src.valid) || !dnsNameOk(domain)}>
             {tr("Create network")}
           </Button>
         </>
@@ -317,6 +321,7 @@ function CreateNetworkDialog({ open, onClose, provider }: { open: boolean; onClo
         </>
       )}
       <Field label={tr("QoS policy")}>{(id) => <QosPolicyPicker id={id} value={qos} onChange={setQos} />}</Field>
+      {dns.on && <DnsDomainField value={domain} onChange={setDomain} />}
       <Switch checked={withSubnet} onChange={setWithSubnet} label={tr("Create a subnet")} hint={tr("Instances need a subnet to get an IP address.")} />
       {withSubnet && <SubnetFields v={sub} set={(p) => setSub((s) => ({ ...s, ...p }))} src={src} />}
       <ErrorNotice error={m.error} />
@@ -335,6 +340,7 @@ export function NetworkDetail() {
   const projects = useProjects(session.is_admin);
   const actions = useNetworkActions();
   const qos = useQosPolicies();
+  const dns = useNeutronDns();
   const [tab, setTab] = useTab(TABS, "overview");
   const n = net.data;
   const projectName = (pid: string) => projects.data?.find((p) => p.id === pid)?.name ?? session.projects.find((p) => p.id === pid)?.name ?? pid;
@@ -401,6 +407,7 @@ export function NetworkDetail() {
                     )}
                   </Detail>
                   <Detail label={tr("Port security")}>{n.port_security_enabled === false ? tr("Off by default") : tr("On by default")}</Detail>
+                  {dns.on && <Detail label={tr("DNS domain")}>{n.dns_domain ? <Mono>{n.dns_domain}</Mono> : tr("None")}</Detail>}
                   {n["provider:network_type"] && <Detail label={tr("Network type")}>{n["provider:network_type"]}</Detail>}
                   {n["provider:physical_network"] && <Detail label={tr("Physical network")}>{n["provider:physical_network"]}</Detail>}
                   {n["provider:segmentation_id"] != null && <Detail label={tr("Segmentation ID")}>{n["provider:segmentation_id"]}</Detail>}

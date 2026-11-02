@@ -13,6 +13,7 @@ import { useProjects } from "@/lib/identity";
 import { type FloatingIp, networkStatus, os, useInvalidate, useListOrPages, useNetworks, usePorts, useServers } from "@/lib/os";
 import { useSession } from "@/lib/session";
 import { tr } from "@/lib/i18n";
+import { DnsDomainField, dnsDomain, dnsNameOk, useNeutronDns } from "./dns";
 
 export default function FloatingIps({ admin = false }: { admin?: boolean }) {
   const session = useSession().data!;
@@ -40,6 +41,8 @@ export default function FloatingIps({ admin = false }: { admin?: boolean }) {
   });
   const ports = usePorts();
   const servers = useServers(admin ? { all_tenants: 1 } : undefined);
+  const dns = useNeutronDns();
+  const fipName = (f: FloatingIp) => (f.dns_name ? `${f.dns_name}.${f.dns_domain ?? ""}` : "");
   const invalidate = useInvalidate();
   const toast = useToast();
   const [allocating, setAllocating] = useState(false);
@@ -91,6 +94,7 @@ export default function FloatingIps({ admin = false }: { admin?: boolean }) {
       ? [{ key: "project", header: tr("Project"), width: "9rem", hideBelow: "md", cell: (f: FloatingIp) => projectName(f.project_id), value: (f: FloatingIp) => projectName(f.project_id) } as Column<FloatingIp>]
       : []),
     { key: "pool", header: tr("Pool"), width: "9rem", hideBelow: "md", cell: (f) => netName(f.floating_network_id), value: (f) => netName(f.floating_network_id) },
+    ...(dns.on ? [{ key: "dns", header: tr("DNS name"), hideBelow: "xl" as const, mono: true, cell: fipName, value: fipName }] : []),
     { key: "description", header: tr("Description"), hideBelow: "xl", cell: (f) => <span className="text-muted">{f.description || "—"}</span>, value: (f) => f.description ?? "" },
   ];
 
@@ -189,9 +193,14 @@ function AllocateDialog({ open, admin, onClose }: { open: boolean; admin: boolea
   const [project, setProject] = useState(session.project?.id ?? "");
   const [address, setAddress] = useState("");
   const [description, setDescription] = useState("");
+  const dns = useNeutronDns();
+  const [dnsName, setDnsName] = useState("");
+  const [domain, setDomain] = useState("");
   const invalidate = useInvalidate();
   const toast = useToast();
   const net = pool || ext.data?.[0]?.id || "";
+  // Neutron takes both or neither.
+  const dnsOk = dnsNameOk(dnsName) && dnsNameOk(domain) && !dnsName.trim() === !domain.trim();
   const ipOk = !address.trim() || /^[0-9a-fA-F:.]+$/.test(address.trim());
   const m = useMutation({
     mutationFn: () =>
@@ -201,6 +210,7 @@ function AllocateDialog({ open, admin, onClose }: { open: boolean; admin: boolea
           ...(admin && project ? { project_id: project } : {}),
           ...(admin && address.trim() ? { floating_ip_address: address.trim() } : {}),
           ...(description.trim() ? { description: description.trim() } : {}),
+          ...(dns.on && dnsName.trim() ? { dns_name: dnsName.trim(), dns_domain: dnsDomain(domain) } : {}),
         },
       }),
     onSuccess: (r) => {
@@ -224,7 +234,7 @@ function AllocateDialog({ open, admin, onClose }: { open: boolean; admin: boolea
           <Button type="button" onClick={onClose}>
             {tr("Cancel")}
           </Button>
-          <Button type="submit" variant="primary" busy={m.isPending} disabled={!net || !ipOk || (admin && !project)}>
+          <Button type="submit" variant="primary" busy={m.isPending} disabled={!net || !ipOk || (admin && !project) || (dns.on && !dnsOk)}>
             {tr("Allocate")}
           </Button>
         </>
@@ -259,6 +269,17 @@ function AllocateDialog({ open, admin, onClose }: { open: boolean; admin: boolea
         </>
       )}
       <Field label={tr("Description")}>{(id) => <Input id={id} value={description} onChange={(e) => setDescription(e.target.value)} placeholder={tr("What this address is for")} />}</Field>
+      {dns.on && (
+        <>
+          <Field
+            label={tr("DNS name")}
+            hint={dnsName.trim() && !domain.trim() ? tr("Also choose a DNS domain.") : tr("Optional: publish this address in Designate as <name>.<domain>, whatever it points to. Can't be changed later.")}
+          >
+            {(id) => <Input id={id} value={dnsName} onChange={(e) => setDnsName(e.target.value)} placeholder="www" className={dnsNameOk(dnsName) ? "font-mono text-[13px]" : "border-led-red font-mono text-[13px]"} />}
+          </Field>
+          <DnsDomainField value={domain} onChange={setDomain} hint={!dnsName.trim() && domain.trim() ? tr("Also enter a DNS name.") : tr("The zone must exist in Designate, e.g. example.com.")} />
+        </>
+      )}
       <ErrorNotice error={m.error} />
     </Dialog>
   );

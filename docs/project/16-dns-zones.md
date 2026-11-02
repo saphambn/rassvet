@@ -84,3 +84,35 @@ takes the other project's ID; **Stop sharing** works once that project has no re
 
 **Unset PTR record** gives the address its default name back. A PTR record goes away when the floating IP is
 released.
+
+## Automatic records for instances (Neutron DNS integration)
+
+When the operator has integrated Neutron with Designate, Neutron writes the records of your instances for
+you: give a network a **DNS domain** (one of your zones) and every floating IP associated with a port on it gets
+an A record named after the port, e.g. `web01.app.example.com`. Clouds without the integration show none of
+these fields; the zone's **Overview** then says so, and you add records by hand as above.
+
+1. Create the zone first (see [Create a zone](#create-a-zone)), e.g. `app.example.com.`.
+2. Go to **Network → Networks** and create a network, or open one and choose **Edit**. In **DNS domain** pick the
+   zone from the suggestions (the trailing dot is added for you).
+
+   ![DNS domain of a network](../images/project/dlg-network-dns.png)
+
+3. Launch instances on the network: Nova sets each instance port's **DNS name** to the instance's name. To use
+   another name, edit the port (**Network → Ports → Edit**); the dialog shows the names the port has now. Where
+   the cloud allows it, a port can also have a **DNS domain** of its own instead of the network's.
+
+   ![DNS name of a port](../images/project/dlg-port-dns.png)
+
+4. Associate a floating IP with the instance. Neutron adds the record to the zone; the network's **Overview**
+   shows its DNS domain and **Ports** lists each port's DNS name.
+
+The zone's **Overview** lists the networks whose DNS domain it is:
+
+![Networks using a zone](../images/project/dns-zone-auto.png)
+
+A floating IP can also get a name of its own, whatever it points to: in **Network → Floating IPs → Allocate**,
+enter a **DNS name** and a **DNS domain** (both are needed). Neutron sets these only when the address is
+allocated; to change them, allocate a new address.
+
+![DNS name of a floating IP](../images/project/dlg-fip-dns.png)

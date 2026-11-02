@@ -23,6 +23,7 @@ import {
 import { useSession } from "@/lib/session";
 import { QosPolicyPicker } from "./QosPolicies";
 import { SubnetSourceFields, useSubnetSource } from "./subnetSource";
+import { DnsDomainField, dnsDomain, dnsNameOk, useNeutronDns } from "./dns";
 import { tr, trx } from "@/lib/i18n";
 
 // =========================================================================== shared bits
@@ -87,10 +88,13 @@ export function EditNetworkDialog({ network, onClose }: { network: Network; onCl
   const [portSecurity, setPortSecurity] = useState(network.port_security_enabled ?? true);
   const [mtu, setMtu] = useState(network.mtu ? String(network.mtu) : "");
   const [qos, setQos] = useState(network.qos_policy_id ?? "");
+  const dns = useNeutronDns();
+  const [domain, setDomain] = useState(network.dns_domain ?? "");
   return (
     <ActionDialog
       onClose={onClose}
       title={tr("Edit {v}", { v: network.name || tr("network") })}
+      canSubmit={dnsNameOk(domain)}
       submitLabel={tr("Save")}
       done={tr("Network {v} updated", { v: name || network.id })}
       refresh={["network"]}
@@ -104,6 +108,8 @@ export function EditNetworkDialog({ network, onClose }: { network: Network; onCl
             ...(network.port_security_enabled !== undefined ? { port_security_enabled: portSecurity } : {}),
             ...(mtu && Number(mtu) !== network.mtu ? { mtu: Number(mtu) } : {}),
             ...(qos !== (network.qos_policy_id ?? "") ? { qos_policy_id: qos || null } : {}),
+            // Neutron clears the domain with an empty string.
+            ...(dns.on && dnsDomain(domain) !== (network.dns_domain ?? "") ? { dns_domain: dnsDomain(domain) } : {}),
           },
         })
       }
@@ -114,6 +120,13 @@ export function EditNetworkDialog({ network, onClose }: { network: Network; onCl
         {(id) => <Input id={id} type="number" min={68} value={mtu} onChange={(e) => setMtu(e.target.value)} className="w-32" />}
       </Field>
       <Field label={tr("QoS policy")} hint={tr("Applies to every port on the network that has no policy of its own.")}>{(id) => <QosPolicyPicker id={id} value={qos} onChange={setQos} />}</Field>
+      {dns.on && (
+        <DnsDomainField
+          value={domain}
+          onChange={setDomain}
+          hint={tr("Zone for the records of this network's ports. A change applies to the records Neutron publishes from now on; empty stops publishing.")}
+        />
+      )}
       <Switch checked={up} onChange={setUp} label={tr("Admin state up")} hint={tr("A network that is down passes no traffic.")} />
       {network.port_security_enabled !== undefined && (
         <Switch checked={portSecurity} onChange={setPortSecurity} label={tr("Port security")} hint={tr("Default for new ports: security groups and anti-spoofing apply.")} />
@@ -303,6 +316,9 @@ export function PortDialog({ port, network, onClose }: { port?: Port; network?: 
   const [ip, setIp] = useState("");
   const [mac, setMac] = useState("");
   const [qos, setQos] = useState(port?.qos_policy_id ?? "");
+  const dns = useNeutronDns();
+  const [dnsName, setDnsName] = useState(port?.dns_name ?? "");
+  const [portDomain, setPortDomain] = useState(port?.dns_domain ?? "");
   const sgOpts = useSgOptions(port?.project_id);
   const defaultSg = sgOpts.groups.data?.filter((g) => g.name === "default").map((g) => g.id) ?? [];
   const chosenSgs = sgs ?? defaultSg;
@@ -312,6 +328,8 @@ export function PortDialog({ port, network, onClose }: { port?: Port; network?: 
     if (port?.port_security_enabled !== undefined || !editing) b.port_security_enabled = portSecurity;
     b.security_groups = portSecurity ? chosenSgs : [];
     if (qos !== (port?.qos_policy_id ?? "")) b.qos_policy_id = qos || null;
+    if (dns.on && dnsName.trim() !== (port?.dns_name ?? "")) b.dns_name = dnsName.trim();
+    if (dns.portDomain && dnsDomain(portDomain) !== (port?.dns_domain ?? "")) b.dns_domain = dnsDomain(portDomain);
     if (editing) return os.put("network", `ports/${port.id}`, { port: b });
     b.network_id = netId;
     if (subnetId || ip.trim()) b.fixed_ips = [{ ...(subnetId ? { subnet_id: subnetId } : {}), ...(ip.trim() ? { ip_address: ip.trim() } : {}) }];
@@ -324,7 +342,7 @@ export function PortDialog({ port, network, onClose }: { port?: Port; network?: 
       onClose={onClose}
       size="md"
       title={editing ? tr("Edit port {portLabel}", { portLabel: portLabel(port) }) : network ? tr("Create port on {name}", { name: network.name }) : tr("Create port")}
-      canSubmit={editing || !!netId}
+      canSubmit={(editing || !!netId) && dnsNameOk(dnsName) && dnsNameOk(portDomain)}
       submitLabel={editing ? tr("Save") : tr("Create port")}
       done={editing ? tr("Port updated") : tr("Port created")}
       refresh={["network", "compute"]}
@@ -383,6 +401,30 @@ export function PortDialog({ port, network, onClose }: { port?: Port; network?: 
       />
       <Field label={tr("Security groups")}>{(id) => <SgPicker id={id} value={chosenSgs} onChange={setSgs} projectId={port?.project_id} disabled={!portSecurity} />}</Field>
       <Field label={tr("QoS policy")}>{(id) => <QosPolicyPicker id={id} value={qos} onChange={setQos} inheritLabel={tr("Network's policy (none of its own)")} />}</Field>
+      {dns.on && (
+        <Field
+          label={tr("DNS name")}
+          hint={
+            dnsNameOk(dnsName)
+              ? tr("Host name of this port, e.g. web01. Nova sets it to the instance's name for instance ports.")
+              : tr("Use letters, digits and hyphens, e.g. web01.")
+          }
+        >
+          {(id) => <Input id={id} value={dnsName} onChange={(e) => setDnsName(e.target.value)} placeholder="web01" className={dnsNameOk(dnsName) ? "font-mono text-[13px]" : "border-led-red font-mono text-[13px]"} />}
+        </Field>
+      )}
+      {dns.portDomain && (
+        <DnsDomainField
+          value={portDomain}
+          onChange={setPortDomain}
+          hint={tr("Optional: a zone for this port's records instead of the network's DNS domain.")}
+        />
+      )}
+      {port?.dns_assignment?.some((a) => a.fqdn) && (
+        <p className="text-xs text-muted">
+          {tr("Names now:")} <span className="font-mono">{[...new Set(port.dns_assignment.map((a) => a.fqdn))].join(", ")}</span>
+        </p>
+      )}
       <Switch checked={up} onChange={setUp} label={tr("Admin state up")} />
       <Field label={tr("Description")}>{(id) => <Input id={id} value={description} onChange={(e) => setDescription(e.target.value)} />}</Field>
       {!IPV4.test(ip.trim()) && ip.trim() && !ip.includes(":") && <p className="text-xs text-led-red">{tr("That doesn't look like an IP address.")}</p>}
