@@ -36,7 +36,7 @@ export const os = {
   /** GET a list following every page; returns the array under `key`. */
   list: <T>(svc: Svc, path: string, key: string, q?: Query) =>
     api.get<Record<string, unknown>>(url(svc, path, { ...q, all_pages: 1 })).then((r) => (r[key] ?? []) as T[]),
-  post: <T>(svc: Svc, path: string, body?: object) => api.post<T>(url(svc, path), body as never),
+  post: <T>(svc: Svc, path: string, body?: object, q?: Query) => api.post<T>(url(svc, path, q), body as never),
   put: <T>(svc: Svc, path: string, body?: object) => api.put<T>(url(svc, path), body as never),
   patch: <T>(svc: Svc, path: string, body?: object) => api.patch<T>(url(svc, path), body as never),
   del: (svc: Svc, path: string, q?: Query, body?: object) => api.del<void>(url(svc, path, q), body as never),

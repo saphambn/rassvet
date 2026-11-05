@@ -4,9 +4,9 @@
  * so values are readable as text and series aren't told apart by colour alone.
  */
 import { useEffect, useRef, useState } from "react";
-import { cn, lang, tr } from "@rassvet/sdk";
-import type { Range, Series, Unit } from "./api";
-import { fmt, fmtTick, niceTicks } from "./units";
+import { lang, tr } from "@/lib/i18n";
+import { type Range, type Series, type Unit, fmt, fmtTick, niceTicks } from "@/lib/units";
+import { cn } from "@/lib/utils";
 
 /** Categorical slots, light and dark steps (validated for colour-vision deficiency, in this order). */
 const STYLE = `

@@ -2,8 +2,7 @@
 import { useState } from "react";
 import { cn, tr } from "@rassvet/sdk";
 import type { Series, Unit } from "./api";
-import { seriesColor, useChartStyle, useLegendPick } from "./Chart";
-import { fmt } from "./units";
+import { fmt, seriesColor, useChartStyle, useLegendPick } from "@rassvet/sdk";
 
 const last = (s: Series) => s.values.at(-1)?.[1] ?? null;
 

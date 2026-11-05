@@ -7,7 +7,7 @@ Single-binary dashboard for OpenStack, written in Rust with an embedded React UI
 - **Frontend**: React + TypeScript + Tailwind, built into `ui/dist` and embedded into the binary.
 - **OpenStack**: targets 2026.2 (Hibiscus) APIs, oldest supported release 2026.1 (Gazpacho). Microversions are negotiated per cloud.
 - **Core services**: Keystone, Glance, Nova, Placement, Neutron, Cinder, Barbican.
-- **Extensions**: other services (Octavia load balancers, Magnum Kubernetes clusters, Designate DNS, and Monitors: instance and physical server dashboards from Prometheus, defined in YAML) are compile-time extension crates under `extensions/`.
+- **Extensions**: other services (Octavia load balancers, Magnum Kubernetes clusters, Designate DNS, DBaaS on Genestack database clusters, and Monitors: instance and physical server dashboards from Prometheus, defined in YAML) are compile-time extension crates under `extensions/`.
 
 ## Documentation
 
@@ -23,6 +23,7 @@ crates/server        rassvet binary: config, sessions, core API, embedded UI
 extensions/octavia   Reference extension: Rust crate + ui/ (React pages)
 extensions/magnum    Kubernetes clusters (Magnum): gateway, kubeconfig signing + ui/
 extensions/designate DNS zones (Designate): gateway, zone file import / export + ui/
+extensions/dbaas     Database clusters (DBaaS on Genestack): gateway + ui/
 extensions/monitors  Monitors: dashboards from Prometheus; panels/default.yaml = built-in panels + ui/
 ui/                  Host UI (Vite + React); `@rassvet/sdk` is the API exposed to extension UIs
 ```

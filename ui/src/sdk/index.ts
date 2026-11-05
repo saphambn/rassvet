@@ -58,6 +58,9 @@ export { useNeutronExtensions } from "@/lib/neutron";
 // Glance images a project can boot (its own, accepted shared ones and public ones, active only)
 export { type Image, useBootImages } from "@/lib/image";
 export { fmtDate, fmtBytes } from "@/lib/format";
+// Time series charts (SVG): value formatting per unit, the chart with its legend, colours.
+export { type Unit, type Series, type Range, fmt, fmtTick, niceTicks, scaleFor } from "@/lib/units";
+export { Chart, Swatch, seriesColor, seriesDash, useChartStyle, useLegendPick } from "@/components/TimeChart";
 export { useProjects } from "@/lib/identity";
 export { useNewParam, useTab } from "@/lib/useTab";
 export { Link, useNavigate, useInAdmin } from "@/components/Link";

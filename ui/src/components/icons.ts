@@ -9,7 +9,7 @@ import {
   EllipsisVertical, ExternalLink, Maximize2, ArrowUp, ArrowDown, Unlink, Link2, ScrollText, History,
   RotateCcw, LifeBuoy, MoveRight, Pause, Play, Cable, Image, Eye, EyeOff, ArrowRightLeft, Expand, Undo2,
   Scaling, Hammer, Unplug, ShieldPlus, Rocket, CopyPlus, SquarePen, Settings2,
-  DatabaseBackup, ArchiveRestore, Inbox, Send, ListPlus, ListMinus, Minus, Share2, ChartBar, Cloud, Minimize2,
+  Database, DatabaseBackup, ArchiveRestore, Inbox, Send, ListPlus, ListMinus, Minus, Share2, ChartBar, Cloud, Minimize2,
   Radio, Container, SlidersHorizontal, RadioTower, EthernetPort, File, FolderPlus, FolderUp, FolderOpen, Wrench, Eraser, FileCode, PanelLeftClose, PanelLeftOpen, ListChecks,
   type LucideIcon,
 } from "lucide-react";
@@ -40,7 +40,7 @@ const registry: Record<string, LucideIcon> = {
   pause: Pause, play: Play, cable: Cable, image: Image, eye: Eye, "eye-off": EyeOff, "arrow-right-left": ArrowRightLeft,
   expand: Expand, undo: Undo2, scaling: Scaling, hammer: Hammer, unplug: Unplug,
   "shield-plus": ShieldPlus, rocket: Rocket, "copy-plus": CopyPlus, edit: SquarePen, settings: Settings2,
-  "database-backup": DatabaseBackup, "archive-restore": ArchiveRestore, inbox: Inbox, send: Send,
+  database: Database, "database-backup": DatabaseBackup, "archive-restore": ArchiveRestore, inbox: Inbox, send: Send,
   "list-plus": ListPlus, "list-minus": ListMinus, minus: Minus, share: Share2, "chart-bar": ChartBar, cloud: Cloud, minimize: Minimize2,
   radio: Radio, container: Container, "sliders-horizontal": SlidersHorizontal, "radio-tower": RadioTower, "ethernet-port": EthernetPort, file: File, "folder-plus": FolderPlus, "folder-up": FolderUp, "folder-open": FolderOpen,
   wrench: Wrench, eraser: Eraser, "file-code": FileCode, "panel-left-close": PanelLeftClose, "panel-left-open": PanelLeftOpen, "list-checks": ListChecks,

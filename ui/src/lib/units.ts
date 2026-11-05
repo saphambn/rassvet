@@ -1,5 +1,30 @@
 /** Number formatting per unit, and the scale and ticks of a chart's value axis. */
-import type { Unit } from "./api";
+
+/** Units of the values of a time series chart. */
+export type Unit =
+  | "count"
+  | "percent"
+  | "percent_unit"
+  | "bytes"
+  | "bytes_per_sec"
+  | "bits_per_sec"
+  | "ops_per_sec"
+  | "packets_per_sec"
+  | "seconds";
+
+/** One line of a chart. */
+export interface Series {
+  name: string;
+  labels: Record<string, string>;
+  /** [unix seconds, value], sorted by time. */
+  values: [number, number][];
+}
+
+/** A time range in unix seconds. */
+export interface Range {
+  start: number;
+  end: number;
+}
 
 interface Scale {
   div: number;

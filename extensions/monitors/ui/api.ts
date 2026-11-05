@@ -4,22 +4,13 @@
  * data of one panel. The server fills every PromQL template and scopes a project user's
  * `$project_id` to their own project.
  */
-import { api, useQuery } from "@rassvet/sdk";
+import { type Range, type Series, type Unit, api, useQuery } from "@rassvet/sdk";
 
 export const BASE = "/ext/monitors";
 
 export type Kind = "instance" | "physical";
 export type ChartType = "time_series" | "pie_chart" | "stat" | "gauge";
-export type Unit =
-  | "count"
-  | "percent"
-  | "percent_unit"
-  | "bytes"
-  | "bytes_per_sec"
-  | "bits_per_sec"
-  | "ops_per_sec"
-  | "packets_per_sec"
-  | "seconds";
+export type { Range, Series, Unit } from "@rassvet/sdk";
 
 export interface Info {
   admin: boolean;
@@ -77,12 +68,7 @@ export interface HostItem {
 
 export type Targets = { kind: "instance"; guests: GuestItem[] } | { kind: "physical"; hosts: HostItem[] };
 
-export interface Series {
-  name: string;
-  labels: Record<string, string>;
-  /** [unix seconds, value]; one point for stat, gauge and pie chart queries. */
-  values: [number, number][];
-}
+/** `values` of a series: [unix seconds, value]; one point for stat, gauge and pie chart queries. */
 
 export interface PanelData {
   start: number;
@@ -94,11 +80,6 @@ export interface PanelData {
   hidden: number;
 }
 
-/** A time range in unix seconds. */
-export interface Range {
-  start: number;
-  end: number;
-}
 
 const qs = (p: Record<string, string | number | undefined | null>) => {
   const s = new URLSearchParams();

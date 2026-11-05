@@ -1,6 +1,6 @@
 /** The panel grid of a dashboard for one target (or the overview) and the time range bar. */
 import { useEffect, useState } from "react";
-import { Button, Card, ErrorNotice, Field, Icon, Input, Picker, cn, tr } from "@rassvet/sdk";
+import { Button, Card, Chart, ErrorNotice, Field, Icon, Input, Picker, cn, tr } from "@rassvet/sdk";
 import {
   type ChartType,
   type Dashboard,
@@ -13,7 +13,6 @@ import {
   usePanelData,
   useVariables,
 } from "./api";
-import { Chart } from "./Chart";
 import { type RangeSpec, formatSpec, fromLocalInput, presetsFor, toLocalInput } from "./range";
 import { Gauges, Pie, Stats } from "./Viz";
 

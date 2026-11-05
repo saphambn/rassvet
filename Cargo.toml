@@ -8,6 +8,7 @@ members = [
     "extensions/magnum",
     "extensions/designate",
     "extensions/monitors",
+    "extensions/dbaas",
 ]
 
 [workspace.package]
@@ -23,6 +24,7 @@ rassvet-ext-octavia = { path = "extensions/octavia" }
 rassvet-ext-magnum = { path = "extensions/magnum" }
 rassvet-ext-designate = { path = "extensions/designate" }
 rassvet-ext-monitors = { path = "extensions/monitors" }
+rassvet-ext-dbaas = { path = "extensions/dbaas" }
 
 anyhow = "1"
 base64 = "0.22"

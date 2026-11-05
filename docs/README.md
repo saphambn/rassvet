@@ -8,7 +8,7 @@ Each page starts with the **use case** (who needs it and why), then gives **step
 
 Screenshots were taken against a lab cloud; names, sizes and addresses on your cloud will differ.
 Menu entries only appear when your cloud offers the service (for example, *Object storage* needs Swift or
-Ceph RGW, *Load balancers* needs Octavia, *Kubernetes clusters* needs Magnum, *DNS zones* needs Designate, *Monitoring* needs a Prometheus configured in Rassvet) and when your role is allowed to use it.
+Ceph RGW, *Load balancers* needs Octavia, *Kubernetes clusters* needs Magnum, *DNS zones* needs Designate, *Database clusters* needs DBaaS on Genestack, *Monitoring* needs a Prometheus configured in Rassvet) and when your role is allowed to use it.
 
 ## Project guides
 
@@ -31,6 +31,7 @@ Ceph RGW, *Load balancers* needs Octavia, *Kubernetes clusters* needs Magnum, *D
 | 15 | [Kubernetes clusters](project/15-kubernetes-clusters.md) | create a Kubernetes cluster, connect with kubectl, resize and upgrade it |
 | 16 | [DNS zones](project/16-dns-zones.md) | host a domain's records, import / export zone files, set reverse DNS of floating IPs, automatic records for instances (DNS domain of a network) |
 | 17 | [Instance monitors](project/17-monitoring.md) | see CPU, memory, disk and network charts of your instances |
+| 18 | [Database clusters](project/18-databases.md) | create MongoDB, MySQL and PostgreSQL clusters, connect, allow networks, back up and restore, watch metrics, logs, events and slow queries, tune engine parameters; admins: all clusters, quotas, locks, runtime and repairs |
 
 ## Admin guides
 

@@ -25,6 +25,8 @@ pub fn registered(cfg: &Config) -> anyhow::Result<Vec<Arc<dyn Extension>>> {
     v.push(Arc::new(rassvet_ext_monitors::Monitors::from_settings(
         settings_of(cfg, rassvet_ext_monitors::ID),
     )?));
+    #[cfg(feature = "ext-dbaas")]
+    v.push(Arc::new(rassvet_ext_dbaas::Dbaas));
 
     for c in &cfg.clouds {
         for id in c.extensions.keys() {
