@@ -39,8 +39,12 @@ pub fn build(config: Config, extensions: Vec<Arc<dyn Extension>>) -> anyhow::Res
             Some(p) => Some(std::fs::read(p).with_context(|| format!("reading CA file {p}"))?),
             None => None,
         };
-        let http = rassvet_os_client::http_client(c.insecure_tls, ca.as_deref())
-            .with_context(|| format!("HTTP client for cloud '{}'", c.id))?;
+        let http = rassvet_os_client::http_client_with(
+            c.insecure_tls,
+            ca.as_deref(),
+            std::time::Duration::from_secs(c.pool_idle_timeout_secs),
+        )
+        .with_context(|| format!("HTTP client for cloud '{}'", c.id))?;
         clouds.push(Arc::new(Cloud {
             keystone: Keystone::new(http.clone(), &c.auth_url),
             http,

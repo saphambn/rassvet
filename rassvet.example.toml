@@ -49,6 +49,10 @@ interface = "public"          # public | internal | admin
 # default_region = "RegionOne"
 # ca_file = "/etc/ssl/certs/openstack-ca.pem"
 insecure_tls = false
+# Seconds an idle connection to the cloud's APIs is kept for reuse (default 90). Keep it below the
+# idle timeout of the API gateway: behind Genestack's Envoy Gateway, which closes idle connections
+# after 5 s, set 4.
+# pool_idle_timeout_secs = 4
 
 # Optional: Monitors extension. Dashboards of instances and physical servers, read from a
 # Prometheus-compatible API (Prometheus, VictoriaMetrics…). Without this table the extension is

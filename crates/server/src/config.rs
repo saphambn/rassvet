@@ -122,6 +122,11 @@ pub struct CloudConfig {
     pub insecure_tls: bool,
     #[serde(default)]
     pub ca_file: Option<String>,
+    /// Seconds an idle connection to this cloud's APIs is kept for reuse (default 90, reqwest's
+    /// own). Keep it below the idle timeout of the cloud's API gateway: 4 behind Genestack's
+    /// Envoy Gateway, which closes connections idle for 5 s.
+    #[serde(default = "default_pool_idle_timeout_secs")]
+    pub pool_idle_timeout_secs: u64,
     /// Settings of compiled-in extensions for this cloud: `[cloud.extensions.<id>]` tables,
     /// read by each extension (e.g. `[cloud.extensions.monitors]` for its Prometheus).
     #[serde(default)]
@@ -130,6 +135,10 @@ pub struct CloudConfig {
 
 fn default_domain() -> String {
     "Default".into()
+}
+
+fn default_pool_idle_timeout_secs() -> u64 {
+    rassvet_os_client::DEFAULT_POOL_IDLE_TIMEOUT_SECS
 }
 
 impl Config {
@@ -155,6 +164,16 @@ impl Config {
                     .all(|b| b.is_ascii_alphanumeric() || b"-_.".contains(&b))
         }) {
             bail!("[[cloud]] id {bad:?} must be 1-64 letters, digits, '-', '_' or '.'");
+        }
+        if let Some(c) = cfg
+            .clouds
+            .iter()
+            .find(|c| !(1..=3600).contains(&c.pool_idle_timeout_secs))
+        {
+            bail!(
+                "[[cloud]] {}: pool_idle_timeout_secs must be 1-3600 (seconds)",
+                c.id
+            );
         }
         if let Some(m) = &cfg.memcached {
             if m.key_prefix.is_empty()
@@ -197,6 +216,33 @@ mod tests {
         assert!(cfg.memcached.is_none());
         assert_eq!(cfg.log.max_files, 14);
         assert!(cfg.log.file.is_none());
+        assert_eq!(cfg.clouds[0].pool_idle_timeout_secs, 90);
+    }
+
+    #[test]
+    fn pool_idle_timeout_per_cloud() {
+        let cloud = |extra: &str| {
+            format!(
+                "[[cloud]]\nid = \"lab\"\nname = \"Lab\"\nauth_url = \"http://keystone/v3\"\n{extra}"
+            )
+        };
+        let load = |raw: String| {
+            let path = std::env::temp_dir().join(format!(
+                "rassvet-pool-{}-{}.toml",
+                std::process::id(),
+                raw.len()
+            ));
+            std::fs::write(&path, raw).unwrap();
+            let r = Config::load(&path);
+            let _ = std::fs::remove_file(&path);
+            r
+        };
+        let cfg = load(cloud("")).unwrap();
+        assert_eq!(cfg.clouds[0].pool_idle_timeout_secs, 90);
+        let cfg = load(cloud("pool_idle_timeout_secs = 4")).unwrap();
+        assert_eq!(cfg.clouds[0].pool_idle_timeout_secs, 4);
+        let err = load(cloud("pool_idle_timeout_secs = 0")).unwrap_err();
+        assert!(err.to_string().contains("pool_idle_timeout_secs"), "{err}");
     }
 
     #[test]

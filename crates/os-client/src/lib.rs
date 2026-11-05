@@ -20,11 +20,36 @@ pub use image::Glance;
 pub use microversion::Microversion;
 pub use rest::Rest;
 
-/// Build the shared HTTP client used for all OpenStack calls.
+/// Seconds an idle pooled connection is kept by default: reqwest's own default (90 s). A cloud
+/// whose API gateway closes idle connections sooner needs a lower value; see [`http_client_with`].
+pub const DEFAULT_POOL_IDLE_TIMEOUT_SECS: u64 = 90;
+
+/// Build the shared HTTP client used for all OpenStack calls, with the default idle timeout.
 pub fn http_client(insecure_tls: bool, ca_pem: Option<&[u8]>) -> Result<reqwest::Client> {
+    http_client_with(
+        insecure_tls,
+        ca_pem,
+        std::time::Duration::from_secs(DEFAULT_POOL_IDLE_TIMEOUT_SECS),
+    )
+}
+
+/// Like [`http_client`], keeping idle connections for `pool_idle_timeout`. Keep it below the
+/// idle timeout of the cloud's API gateway, e.g. 4 s behind Genestack's Envoy Gateway, which
+/// closes connections idle for 5 s.
+pub fn http_client_with(
+    insecure_tls: bool,
+    ca_pem: Option<&[u8]>,
+    pool_idle_timeout: std::time::Duration,
+) -> Result<reqwest::Client> {
     let mut b = reqwest::Client::builder()
         .user_agent(concat!("rassvet/", env!("CARGO_PKG_VERSION")))
         .connect_timeout(std::time::Duration::from_secs(10))
+        // Idle connections must be dropped before the API gateway closes them: a request sent on
+        // a connection being closed fails with "error sending request". Genestack's Envoy Gateway
+        // closes client connections idle for 5 s (ClientTrafficPolicy idleTimeout), so a cloud
+        // behind it sets `pool_idle_timeout_secs = 4` in its `[[cloud]]`; the default stays at
+        // reqwest's 90 s. The retry in `trace::exec` covers the remaining race.
+        .pool_idle_timeout(pool_idle_timeout)
         .timeout(std::time::Duration::from_secs(120))
         // Every request carries an X-Auth-Token header, which reqwest (unlike Authorization)
         // would forward on a redirect to another host. Follow redirects only within the same
@@ -80,7 +105,13 @@ mod tests {
         assert!(join_next("https://g:9292", "//evil.example/v2").is_none());
         assert!(join_next("https://g:9292", "https://evil.example/v2").is_none());
         let a = reqwest::Url::parse("https://k:5000/v3").unwrap();
-        assert!(!same_origin(&a, &reqwest::Url::parse("https://k/x").unwrap()));
-        assert!(same_origin(&a, &reqwest::Url::parse("https://k:5000/y").unwrap()));
+        assert!(!same_origin(
+            &a,
+            &reqwest::Url::parse("https://k/x").unwrap()
+        ));
+        assert!(same_origin(
+            &a,
+            &reqwest::Url::parse("https://k:5000/y").unwrap()
+        ));
     }
 }
